@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 from OptLib import gradDescent
 import pyomo.environ as pyo
 from pyomo.opt import SolverFactory
-
+from sympy import diff
 
 # Define linear programming function and gradient
 def gradOpt(n, CB, PPV, piG, dt):
@@ -56,12 +56,12 @@ def gradOpt(n, CB, PPV, piG, dt):
     # perform optimization
     ##### TASK 3: Add code here ##########
     x, xs = gradDescent(ff, 0., n, theta1=1e-3, theta2=1e-6)
-    x1, xs1 = gradDescent(ff, 0., n-1, theta1=1e-3, theta2=1e-6)
+    #x1, xs1 = gradDescent(ff, 0., n-1, theta1=1e-3, theta2=1e-6)
     # calculate all values:
     ##### TASK 3: Add code here ##########
 
     EB = np.vstack(xs)
-    PB = (np.vstack(xs)-np.vstack(xs1))/dt
+    PB = diff(ff,EB)
     PG = PB + PPV
 
     return EB, PB, PG

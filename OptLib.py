@@ -29,13 +29,13 @@ def linesearch(fun, x_0=0, t_0=1e-3):
 
     ############ Task 1 ############
     t = [t_0]
-    x = [x_0,x_0+t[0]]
-    y = [fun(x[0]),fun(x[1])]
-    while y[-1] <= y[-2]:
+    x = [x_0, x_0 + t[0]]
+    y = [fun(x[0]), fun(x[1])]
+    while y[-2] >= y[-1]:
         t.append(2*t[-1])
         x.append(x[-1]+t[-1])
         y.append(fun(x[-1]))
-    return {'topt': t[-2], 'all_ts': t}
+    return {'topt': y[-2], 'all_ts': t}
 
 
 def gradDescent(fun, x_0, nmax=100, theta1=1e-3, theta2=1e-6):
@@ -64,19 +64,15 @@ def gradDescent(fun, x_0, nmax=100, theta1=1e-3, theta2=1e-6):
         intermediate points during optimization.
 
     '''
+
+    ############ Task 2 ############
     f = lambda x: fun(x)['value']
     g = lambda x: fun(x)['gradient']
     alpha = linesearch(f,x_0)['topt']
-
-    x = [x_0,x_0 - alpha*g(x_0)]
+    x = [x_0, x_0-g(x_0)*alpha]
     y = [f(x[0]),f(x[1])]
-
-    while alpha>= theta1 and y[-2]-y[-1]>=theta2 and len(y) <= nmax:
-        
-        x_current = x[-1] - alpha*g(x[-1])
-        x.append(x_current)
-        y.append(f(x_current))
-
-    ############ Task 2 ############
-
+    while y[-1]-y[-2]>=theta2 and alpha>=theta1 and len(y)<=nmax:
+        current_x = x[-1] - g(x[-1])*alpha
+        x.append(current_x)
+        y.append(f(current_x))
     return x[-2], x

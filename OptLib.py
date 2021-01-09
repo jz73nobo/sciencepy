@@ -76,3 +76,4 @@ def gradDescent(fun, x_0, nmax=100, theta1=1e-3, theta2=1e-6):
         x.append(current_x)
         y.append(f(current_x))
     return x[-2], x
+

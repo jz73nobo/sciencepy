@@ -47,20 +47,19 @@ def gradOpt(n, CB, PPV, piG, dt):
 
     ############ Task 3 Add code here ############
     # define Matrices and vectors for linear optimization
-    A = np.eye(n)
+    A = np.linspace(1, 24, n)
     b = CB
-    c = piG
+    c = np.zeros(n)
 
     ff = lambda x: f(x, A, b, c, 1e2)
 
     # perform optimization
     ##### TASK 3: Add code here ##########
     x, xs = gradDescent(ff, 0., n, theta1=1e-3, theta2=1e-6)
-    #x1, xs1 = gradDescent(ff, 0., n-1, theta1=1e-3, theta2=1e-6)
     # calculate all values:
     ##### TASK 3: Add code here ##########
 
-    EB = np.vstack(xs)
+    EB = x
     PB = diff(ff,EB)
     PG = PB + PPV
 
@@ -94,7 +93,37 @@ def pyomoOpt(n, CB, PPV, piG, dt):
 
 	'''
     ############ Task 4 ############
-    return np.zeros(n), np.zeros(n), np.zeros(n)
+    # Step 0: Create an instance of the model
+    model = pyo.ConcreteModel()
+    
+    # Step 1: Define index sets
+    I = range(n)
+    
+    # Step 2: Define the decision 
+    model.x = pyo.Var(I)
+    
+    # Step 3: Define Objective
+    model.cost = pyo.Objective(expr=sum(piG @ model.x[t] for t in I), sense=pyo.maximize)
+    
+    # Step 4: Constraints
+    model.src = pyo.ConstraintList()
+    EB = []
+    PB = []
+    PG = []
+    for t in I:
+        model.src.add((model.x[t] >= 0)&(model.x[t]<=CB))
+    for t in range(1, len(I)):
+        model.src.add((model.x[t] - model.x[t - 1])/dt + PPV >= 0)
+    model.pprint()
+    
+    results = SolverFactory('glpk').solve(model)
+    results.write()
+    
+    for t in I:
+        EB.append(pyo.value(model.x[t]))
+        PB.append(pyo.value((model.x[t])-pyo.value(model.x[t-dt]))/dt)
+    PG = EB + PB
+    return EB, PB, PG
 
 
 # define problem parameters
@@ -115,8 +144,8 @@ if debugMode:
     dt = 1
 
 # do the optimization
-EB, PB, PG = gradOpt(n, CB, PPV, piG, dt)
-# EB, PB, PG = pyomoOpt(n, CB, PPV, piG, dt)
+# EB, PB, PG = gradOpt(n, CB, PPV, piG, dt)
+EB, PB, PG = pyomoOpt(n, CB, PPV, piG, dt)
 
 
 # %% Plotting
